@@ -77,7 +77,7 @@ class KummerLine:
             ainvs = curve.a_invariants()
             A, C = ainvs[1], 1
             if ainvs != (0, A, 0, 1, 0):
-                raise TypeError('Must use Montgomery model')
+                raise ValueError('Must use Montgomery model')
             self._curve = curve
             self._base_ring = curve.base_ring()
 
@@ -91,10 +91,16 @@ class KummerLine:
             elif len(curve_constants) == 2:
                 A, C = curve_constants
             else:
-                raise ValueError("TODO")
+                raise ValueError(
+                    "The Montgomery coefficient must either be a single scalar a, or\
+                    a tuple [A, C] representing a = A/C."
+                )
             self._base_ring = base_ring
         else:
-            raise ValueError("TODO")
+            raise ValueError(
+                "A Kummer Line must be constructed from either a Montgomery curve, or\
+                    a base field and tuple representing the coefficient A/C = [A, C]"
+                )
 
         # init variables
         self._A = self._base_ring(A)
@@ -302,9 +308,16 @@ class KummerPoint:
         taking the smallest y-coordinate as the 
         chosen root.
         """
-        E = self.parent().curve()
-        P = E.lift_x(self.x())
-        return min(P, -P)
+        # Get the Montgomery curve and constant A
+        L = self.parent()
+        E = L.curve()
+        A = L.a()
+
+        # Compute y2, assume x is a valid coordinate
+        x = self.x()
+        y2 = x * (x**2 + A*x + 1)
+        y = y2.sqrt()
+        return E(x, y)
 
     # =================================== #
     # Addition and multiplication helpers #
@@ -517,8 +530,6 @@ class KummerPoint:
         Function to compute xP + [m]xQ using x-only
         arithmetic. Very similar to the Montgomery ladder above
 
-        TODO: can these functions be combined cleverly? 
-
         Note: self = xQ
         """
         if not isinstance(m, (int, Integer)):
@@ -560,9 +571,6 @@ class KummerPoint:
         (without the identity point).
 
         NOTE: this is implemented to make Vélu-like computations easy
-
-        TODO: this could be made more efficient with double add?
-              for some reason when I try and implement this I get spaghetti! 
         """
         yield self
         R = self.double()

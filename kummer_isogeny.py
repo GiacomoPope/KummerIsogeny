@@ -2,7 +2,7 @@
 Implementation of x-only isogenies between the Kummer Lines of 
 Montgomery Curves
 
-The main class expected to be exported is is `KummerLineIsogeny`
+===========================================================================
 
 USAGE:
 
@@ -48,7 +48,7 @@ VéluSqrt for large ell isogenies
     Faster computation of isogenies of large prime degree
     Daniel J. Bernstein, Luca De Feo, Antonin Leroux, Benjamin Smith
 
-TODO: 
+Future Work: 
 
 - Optimise VéluSqrt, it seems to be underperforming with a threshold of about 1000
   rather than 100 
@@ -58,14 +58,7 @@ TODO:
 
 # Sage imports
 from sage.all import prod, ZZ, PolynomialRing
-
-# ProductTree lives in two places depending on 
-# SageMath version
-from sage.misc.banner import require_version
-if require_version(9,8):
-      from sage.rings.generic import ProductTree
-else:
-      from sage.schemes.elliptic_curves.hom_velusqrt import ProductTree
+from sage.rings.generic import ProductTree
       
 # Local imports
 from kummer_line import KummerLine, KummerPoint
@@ -80,10 +73,6 @@ class KummerLineIsogeny_Generic:
     """
     Generic class for Kummer Line isogenies which we build on top of for
     the Vélu, VéluSqrt and Composite isogeny classes
-
-    TODO:
-    I've never really learnt best practices for making nice parent classes
-    so this probably needs some attention
     """
     def __init__(self):
         self._degree = None
@@ -349,7 +338,7 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
     TODO: currently seems to be under-performing. I think there are
     further optimisations which can be made. Trying to use more projective
     points to remove inversions just seemed to slow down the polynomial
-    computations though...
+    computations though.
     """
     def __init__(self, domain, kernel, degree, check=True):
         # Check the input to the isogeny is well-formed
@@ -381,6 +370,7 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         self.hI_tree  = self._hI_precomputation(kernel, b, c)
         self.EJ_parts = self._EJ_precomputation(kernel, b)
         self.hK = self._hK_precomputation(kernel, degree, b, c)
+        self.hK_reverse = self.hK.reverse()
 
         # Compute the codomain
         self._codomain = self._compute_codomain()
@@ -434,7 +424,7 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
                 (X1X2 - 1)**2
             )
         return polys
-    
+
     def _EJ_precomputation(self, ker, b):
         """
         The polynomials for EJ are of the form
@@ -486,7 +476,6 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         (A : C) using the VéluSqrt adaptation of the Meyers-Reith
         Twisted Edwards curve trick
         """
-        # TODO: should this be projectivised?
         # These are the polynomials for alpha = 1 and alpha = -1
         E0J = prod(F0 + F1 + F2 for F0,F1,F2 in self.EJ_parts)
         E1J = prod(F0 - F1 + F2 for F0,F1,F2 in self.EJ_parts)
@@ -535,28 +524,50 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
     def _evaluate_isogeny(self, P):
         """
         Evaluate the isogeny phi at the point P
+
+        NOTE:
+        
+        We're suppose to compute the quotient:
+
+        Res(hI, EJ0(1/alpha)) * hK(1/alpha)
+        ----------------------------------- * alpha^ell
+          Res(hI, EJ0(alpha)) * hK(alpha)
+        
+        But we can use that
+            f(1/alpha) = reverse(f(alpha)) * alpha^(-d) 
+        for a degree d polynomial, where "reverse"
+        reverses the coefficients of the polynomial 
+        to rewrite this quotient as:
+
+        Res(hI, reverse(EJ0(alpha))) * reverse(hK(alpha))
+        -------------------------------------------------- * alpha
+               Res(hI, EJ0(alpha)) * hK(alpha)
+            
+        
+        This is about 10-15% faster for SageMath, because the
+        reverse is a little slow with the conversion to and from
+        NTL for the Polynomial Ring elements, but should be much
+        faster in other languages.
         """
+
         if P.is_zero():
             return self._codomain((1, 0))
 
         # x-coordinate of point to evaluate
         alpha = P.x()
-        alpha_inv = 1/alpha
 
-        # TODO: can I make this projective without needing alpha?
         # Compute two polynomials from giant steps
-        EJ0 = prod((F0 * alpha_inv + F1) * alpha_inv + F2 for F0,F1,F2 in self.EJ_parts)
         EJ1 = prod((F0 * alpha + F1) * alpha + F2 for F0,F1,F2 in self.EJ_parts)
+        EJ0 = EJ1.reverse()
 
         # Resultants and evaluations 
         R0 = self._hI_resultant(EJ0)
         R1 = self._hI_resultant(EJ1)
-        M0  = self.hK(alpha_inv)
+        M0  = self.hK_reverse(alpha)
         M1  = self.hK(alpha)
-        # M0, M1 = self._hK_evaluate(alpha, alpha_inv)
 
         # Make new point
-        X_new = (R0 * M0)**2 * alpha**self._degree
+        X_new = (R0 * M0)**2 * alpha
         Z_new = (R1 * M1)**2
 
         return self._codomain((X_new, Z_new))
@@ -624,9 +635,11 @@ def factored_kummer_isogeny(K, P, order, threshold=1000):
     cofactor = order
     assert (P*order).is_zero()
 
-    # Deal with isomorphisms
+    # TODO: Deal with isomorphisms
+    # Easy option: just use the Sage isomorphisms from K.curve() and map down
+    # Better option: just write the isomorphisms of Montgomery curves
     if cofactor == 1:
-        raise ValueError("TODO: deal with isomorphisms")
+        raise NotImplementedError("Isomorphisms between Kummer Lines are not yet implemented")
 
     psi_list = []
     phi_list = []
