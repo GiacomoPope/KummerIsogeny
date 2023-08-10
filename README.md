@@ -264,18 +264,18 @@ p = 0x1935BECE108DC6C0AAD0712181BB1A414E6A8AAA6B510FC29826190FE7EDA80F
 p = 0x76042798BBFB78AEBD02490BD2635DEC131ABFFFFFFFFFFFFFFFFFFFFFFFFFFF
 ```
 
-#### BSIDH: Example 3 parameters
+#### BSIDH: Example 2 parameters
 
 For Alice and Bob's keygen and secret computation times, we find:
 
 ```
 Alice
-Keygen took: 1.07452
-Secret took: 0.55633
+Keygen took: 0.74583
+Secret took: 0.37905
 
 Bob
-Keygen took: 0.83970
-Secret took: 0.43004
+Keygen took: 0.63818
+Secret took: 0.29245
 ```
 
 Comparing the performance of KummerLine isogenies with the in-built SageMath isogenies
@@ -286,27 +286,27 @@ we find:
 Computing isogenies of degree: 2^4 * 3 * 7^16 * 17^9 * 31^8 * 311 * 571 * 1321 *
 5119 * 6011 * 14207 * 28477 * 76667
 ================================================================================
-Naive SageMath codomain computation: 32.18145
-Naive SageMath point evaluation: 2.75813
+Naive SageMath codomain computation: 30.01183
+Naive SageMath point evaluation: 3.04108
 
-Optimised SageMath codomain computation: 2.70995
-Optimised SageMath point evaluation: 0.61020
+Optimised SageMath codomain computation: 2.46512
+Optimised SageMath point evaluation: 0.54163
 
-KummerLine codomain computation: 0.56621
-KummerLine point evaluation: 0.16968
+KummerLine codomain computation: 0.37883
+KummerLine point evaluation: 0.12098
 
 ================================================================================
 Computing isogenies of degree: 11^18 * 19 * 23^13 * 47 * 79 * 83 * 89 * 151 *
 3347 * 17449 * 33461 * 51193
 ================================================================================
-Naive SageMath codomain computation: 26.05098
-Naive SageMath point evaluation: 2.26619
+Naive SageMath codomain computation: 24.16028
+Naive SageMath point evaluation: 2.46105
 
-Optimised SageMath codomain computation: 2.23305
-Optimised SageMath point evaluation: 0.49857
+Optimised SageMath codomain computation: 2.02521
+Optimised SageMath point evaluation: 0.43988
 
-KummerLine codomain computation: 0.43419
-KummerLine point evaluation: 0.13936
+KummerLine codomain computation: 0.80380
+KummerLine point evaluation: 0.10258
 ```
 
 ### BSIDH: Example 3 parameters
@@ -315,12 +315,12 @@ For Alice and Bob's keygen and secret computation times, we find:
 
 ```
 Alice
-Keygen took: 1.27039
-Secret took: 0.64458
+Keygen took: 0.85299
+Secret took: 0.47513
 
 Bob
-Keygen took: 0.82202
-Secret took: 0.43603
+Keygen took: 0.57196
+Secret took: 0.29563
 ```
 
 Comparing the performance of KummerLine isogenies with the in-built SageMath isogenies
@@ -331,25 +331,25 @@ we find:
 Computing isogenies of degree: 2^110 * 5 * 7^2 * 67 * 223 * 4229 * 9787 * 13399
 * 21521 * 32257 * 47353
 ================================================================================
-Naive SageMath codomain computation: 32.36682
-Naive SageMath point evaluation: 2.63933
+Naive SageMath codomain computation: 29.69447
+Naive SageMath point evaluation: 2.99138
 
-Optimised SageMath codomain computation: 2.90138
-Optimised SageMath point evaluation: 0.69139
+Optimised SageMath codomain computation: 2.66121
+Optimised SageMath point evaluation: 0.60815
 
-KummerLine codomain computation: 0.63334
-KummerLine point evaluation: 0.19742
+KummerLine codomain computation: 0.43675
+KummerLine point evaluation: 0.13993
 
 ================================================================================
 Computing isogenies of degree: 3^34 * 11 * 17 * 19^2 * 29 * 37 * 53^2 * 97 * 107
 * 109 * 131 * 137 * 197 * 199 * 227 * 251 * 5519 * 9091 * 33997 * 38201
 ================================================================================
-Naive SageMath codomain computation: 22.27161
-Naive SageMath point evaluation: 1.82073
+Naive SageMath codomain computation: 20.22029
+Naive SageMath point evaluation: 2.01559
 
-Optimised SageMath codomain computation: 2.27589
-Optimised SageMath point evaluation: 0.49558
+Optimised SageMath codomain computation: 2.08677
+Optimised SageMath point evaluation: 0.44141
 
-KummerLine codomain computation: 0.43324
-KummerLine point evaluation: 0.14162
+KummerLine codomain computation: 0.29352
+KummerLine point evaluation: 0.09691
 ```
