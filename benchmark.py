@@ -56,7 +56,8 @@ def profile_codomain():
     p_codomain = cProfile.Profile()
     p_codomain.enable()
 
-    _ = KummerLineIsogeny_VeluSqrt(K, ker, ell)
+    for _ in range(100):
+        _ = KummerLineIsogeny_VeluSqrt(K, ker, ell)
 
     p_codomain.disable()
     p_codomain.dump_stats("p_codomain.cProfile")
@@ -77,7 +78,8 @@ def profile_image(ell, K, P, Q):
     p_image = cProfile.Profile()
     p_image.enable()
 
-    phi(img)
+    for _ in range(100):
+        phi(img)
 
     p_image.disable()
     p_image.dump_stats("p_image.cProfile")
@@ -117,5 +119,5 @@ if __name__ == "__main__":
     P, Q = A_cofactor * P, A_cofactor * Q
 
     # print_comparison()
-    ell = ZZ(28477)
+    ell = ZZ(571)
     profile_codomain()
