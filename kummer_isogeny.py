@@ -509,10 +509,8 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         # This uses x-only point addition to generate all points
         # in the set K = {4bc+1, ..., ell-2, ell}
         for i in range(2, self.stop, 2):
-            # QX, QZ = Q.XZ()
-            Qx = Q.x()
-            # hK.append(QZ * self.Z - QX)
-            hK.append(self.Z - Qx)
+            QX, QZ = Q.XZ()
+            hK.append(QZ * self.Z - QX)
 
             if i < self.stop - 1:
                 Q, next_point = next_point, next_point.add(step, Q)
