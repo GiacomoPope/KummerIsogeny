@@ -62,7 +62,8 @@ from sage.all import prod, ZZ, PolynomialRing
 from sage.rings.generic import ProductTree
 
 # Local imports
-from kummer_line import KummerLine, KummerPoint
+from kummer_line import KummerLine, KummerPoint, pari
+from utilities import fast_reverse
 
 # =================================================== #
 # Generic class for creating an isogeny between       #
@@ -378,15 +379,14 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         # baby step and giant step params
         b = (self._degree - 1).isqrt() // 2
         c = (self._degree - 1) // (4 * b)
-        self.stop = self._degree - 4 * b * c
+        stop = self._degree - 4 * b * c
 
         # Pre-compute polynomials which are needed
         # throughout. hI is stored as a product tree
         # for faster resultants
         self.hI_tree = self._hI_precomputation(kernel, b, c)
         self.EJ_parts = self._EJ_precomputation(kernel, b)
-        self.hK = self._hK_precomputation(kernel, degree, b, c)
-        self.hK_reverse = self.hK.reverse()
+        self.hK_data = self._hK_precomputation(kernel, stop)
 
         # Compute the codomain
         self._codomain = self._compute_codomain()
@@ -472,6 +472,41 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         )
         return polys
 
+    # def _Fs_projective(self, QX, QZ):
+    #     """
+    #     Elliptic Resultants for Montgomery curves
+
+    #     Looks janky because sage hates making elements of
+    #     polynomial rings
+    #     """
+    #     # convert to R once, to try and speed things up
+    #     QX = self.R(QX)
+    #     QZ = self.R(QZ)
+    #     Z = self.Z
+
+    #     # Precompute pieces
+    #     # we want to make new polynomials as little as possible
+    #     # as converting from Fp2 to R is crazy slow
+    #     ZQZ = QZ * Z
+    #     ZQX = QX * Z
+
+    #     z1p = ZQZ + QX
+    #     z2p = ZQX + QZ
+    #     z1m = ZQZ - QX
+    #     z2m = ZQX - QZ
+
+    #     z4 = self.Ra * QZ
+    #     z4 *= ZQX
+
+    #     z6 = -(z1p * z2p + z4 + z4)
+
+    #     polys = (
+    #         z1m * z1m,
+    #         z6 + z6,
+    #         z2m * z2m,
+    #     )
+    #     return polys
+
     def _EJ_precomputation(self, ker, b):
         """
         The polynomials for EJ are of the form
@@ -496,7 +531,7 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
 
         return EJ_parts
 
-    def _hK_precomputation(self, ker, ell, b, c):
+    def _hK_precomputation(self, ker, stop):
         r"""
         Compute the polynomial
 
@@ -508,14 +543,28 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         step, next_point = Q, Q.double()
         # This uses x-only point addition to generate all points
         # in the set K = {4bc+1, ..., ell-2, ell}
-        for i in range(2, self.stop, 2):
+        for i in range(2, stop, 2):
             QX, QZ = Q.XZ()
-            hK.append(QZ * self.Z - QX)
+            hK.append((QX, QZ))
 
-            if i < self.stop - 1:
+            if i < stop - 1:
                 Q, next_point = next_point, next_point.add(step, Q)
 
-        return self.R(prod(hK))
+        return hK
+
+    def _hK_codomain(self):
+        h1, h2 = 1, 1
+        for QX, QZ in self.hK_data:
+            h1 *= QZ - QX
+            h2 *= -(QZ + QX)
+        return h1, h2
+
+    def _hK_image(self, alpha):
+        h1, h2 = 1, 1
+        for QX, QZ in self.hK_data:
+            h1 *= QZ - alpha * QX
+            h2 *= alpha * QZ - QX
+        return h1, h2
 
     def _compute_codomain_constants(self):
         """
@@ -530,8 +579,7 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         # Compute resultants and evaluate hK at 1 and -1
         R0 = self._hI_resultant(E0J)
         R1 = self._hI_resultant(E1J)
-        M0 = self.hK(1)
-        M1 = self.hK(-1)
+        M0, M1 = self._hK_codomain()
 
         # We have that
         # d = [(A - 2C)(A + 2C)]^ell * (hS(1) / hS(-1))^8
@@ -600,18 +648,17 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
             return self._codomain((1, 0))
 
         # x-coordinate of point to evaluate
-        alpha = P.x()
+        alpha = pari(P.x())
         alphaR = self.R(alpha)
 
         # Compute two polynomials from giant steps
         EJ1 = prod((F0 * alphaR + F1) * alphaR + F2 for F0, F1, F2 in self.EJ_parts)
-        EJ0 = EJ1.reverse()
+        EJ0 = fast_reverse(EJ1)
 
         # Resultants and evaluations
         R0 = self._hI_resultant(EJ0)
         R1 = self._hI_resultant(EJ1)
-        M0 = self.hK_reverse(alpha)
-        M1 = self.hK(alpha)
+        M0, M1 = self._hK_image(alpha)
 
         # Make new point
         R0M0 = R0 * M0
@@ -696,22 +743,36 @@ def factored_kummer_isogeny(K, P, order, threshold=1000):
             "Isomorphisms between Kummer Lines are not yet implemented"
         )
 
-    psi_list = []
     phi_list = []
     for l, e in cofactor.factor():
-        # Map P through chain length e of l-isogenies
-        P = evaluate_factored_kummer_isogeny(psi_list, P)
-        psi_list = []
+        if l < threshold:
+            # Compute point Q of order l^e
+            D = ZZ(l**e)
+            cofactor //= D
 
-        # Compute point Q of order l^e
-        D = ZZ(l**e)
-        cofactor //= D
+            # Use Q as kernel of degree l^e isogeny
+            Q = cofactor * P
+            psi_list = sparse_isogeny_prime_power(Q, l, e, threshold=threshold)
 
-        # Use Q as kernel of degree l^e isogeny
-        Q = cofactor * P
-        psi_list = sparse_isogeny_prime_power(Q, l, e, threshold=threshold)
+            # For the last step, we don't need to put the kernel
+            # through the isogeny.
+            # TODO: this could be an optional check, to ensure
+            # that the image of the kernel is the identity.
+            if cofactor != 1:
+                P = evaluate_factored_kummer_isogeny(psi_list, P)
 
-        phi_list += psi_list
+            phi_list += psi_list
+
+        else:
+            for _ in range(e):
+                cofactor //= l
+                Q = cofactor * P
+                psi = KummerLineIsogeny_VeluSqrt(Q.parent(), Q, l)
+
+                if cofactor != 1:
+                    P = psi(P)
+
+                phi_list.append(psi)
 
     return phi_list
 

@@ -110,9 +110,10 @@ class KummerLine:
         # init variables
         self._A = self._base_ring(A)
         self._C = self._base_ring(C)
+        self._A, self._C = pari(self._A), pari(self._C)
 
         # Make sure the curve is not singular
-        if (self._A**2 - 4 * self._C**2).is_zero():
+        if (self._A**2 - 4 * self._C**2) == 0:
             raise ValueError(
                 f"Constants {curve_constants} do not define a Montgomery curve"
             )
@@ -344,8 +345,8 @@ class KummerPoint:
 
         t0 = X - Z
         t1 = X + Z
-        t0 = t0 * t0
-        t1 = t1 * t1
+        t0 *= t0
+        t1 *= t1
         Z2 = C * t0
         Z2 = Z2 + Z2
         Z2 = Z2 + Z2
@@ -353,9 +354,9 @@ class KummerPoint:
         t1 = t1 - t0
         t0 = C + C
         t0 = t0 + A
-        t0 = t0 * t1
+        t0 *= t1
         Z2 = Z2 + t0
-        Z2 = Z2 * t1
+        Z2 *= t1
 
         return X2, Z2
 
@@ -375,8 +376,8 @@ class KummerPoint:
         t1 = XP - ZP
         XP = XQ - ZQ
         ZP = XQ + ZQ
-        t0 = XP * t0
-        t1 = ZP * t1
+        t0 *= XP
+        t1 *= ZP
         ZP = t0 - t1
         XP = t0 + t1
         ZP = ZP * ZP
@@ -406,19 +407,19 @@ class KummerPoint:
         X2P = t0 * t0
         t2 = XQ - ZQ
         XQP = XQ + ZQ
-        t0 = t0 * t2
+        t0 *= t2
         Z2P = t1 * t1
-        t1 = t1 * XQP
+        t1 *= XQP
         t2 = X2P - Z2P
-        Z2P = Z2P * C24
-        X2P = X2P * Z2P
+        Z2P *= C24
+        X2P *= Z2P
         XQP = A24 * t2
         ZQP = t0 - t1
         Z2P = XQP + Z2P
         XQP = t0 + t1
-        Z2P = Z2P * t2
-        ZQP = ZQP * ZQP
-        XQP = XQP * XQP
+        Z2P *= t2
+        ZQP *= ZQP
+        XQP *= XQP
         ZQP = xPQ * ZQP
         XQP = XQP * zPQ
 
@@ -436,6 +437,16 @@ class KummerPoint:
         X2, Z2 = self.xDBL(X, Z, A, C)
         return self._parent((X2, Z2))
 
+    def _double_iter(self, n):
+        """
+        Returns [2^k] self
+        """
+        X, Z = self.XZ()
+        A, C = self._parent.extract_constants()
+        for _ in range(n):
+            X, Z = self.xDBL(X, Z, A, C)
+        return self._parent((X, Z))
+
     def double(self):
         """
         Wrapper function which deals with the doubling of
@@ -447,6 +458,21 @@ class KummerPoint:
         if not self._Z:
             return self
         return self._double()
+
+    def double_iter(self, n):
+        """
+        Wrapper function which deals with the repeated
+        doubling
+
+        Returns [2^n] * self
+
+        This avoids the ADD part of xDBLADD, and so is
+        faster when we know our scalar is a power of two
+        """
+        # Deal with identity
+        if not self._Z:
+            return self
+        return self._double_iter(n)
 
     def _add(self, Q, PQ):
         """
