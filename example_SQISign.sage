@@ -8,7 +8,8 @@ available torsion from the SQISign parameters
 
 # Local imports
 from kummer_line import KummerLine
-from utilities import compute_quadratic_twist, fix_even_torsion, compare_isogeny
+from utilities import compute_quadratic_twist, fix_even_torsion
+from benchmark_utils import compare_isogeny
 
 proof.all(False)
 

@@ -8,10 +8,10 @@ import time
 import sys
 
 # Local imports
-
 from kummer_line import KummerLine
 from kummer_isogeny import KummerLineIsogeny
-from utilities import compute_quadratic_twist, fix_even_torsion, compare_isogeny
+from utilities import compute_quadratic_twist, fix_even_torsion
+from benchmark_utils import compare_isogeny
 
 # ============================== #
 #     B-SIDH parameter setup     #
