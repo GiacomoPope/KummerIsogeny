@@ -26,12 +26,12 @@ def compare_isogeny(P, Q, xP, xQ, order):
     print_info(f"Computing isogenies of degree:\n{order.factor()}")
 
     # Time naive SageMath isogeny evaluation
-    # t0 = time.time()
-    # psi = E.isogeny(P, algorithm="factored")
-    # print(f"Naive SageMath codomain computation: {time.time() - t0:.5f}")
-    # t0 = time.time()
-    # psi(Q)
-    # print(f"Naive SageMath point evaluation: {time.time() - t0:.5f}\n")
+    t0 = time.time()
+    psi = E.isogeny(P, algorithm="factored")
+    print(f"Naive SageMath codomain computation: {time.time() - t0:.5f}")
+    t0 = time.time()
+    psi(Q)
+    print(f"Naive SageMath point evaluation: {time.time() - t0:.5f}\n")
 
     # Time optimisation with sparse strategy and velusqrt
     t0 = time.time()

@@ -186,27 +186,27 @@ we get the following results:
 Computing isogenies of degree: 2^33 * 5^21 * 7^2 * 11 * 31 * 83 * 107 * 137 *
 751 * 827 * 3691 * 4019 * 6983
 ================================================================================
-Naive SageMath codomain computation: 4.08866
-Naive SageMath point evaluation: 0.34477
+Naive SageMath codomain computation: 3.97165
+Naive SageMath point evaluation: 0.38979
 
-Optimised SageMath codomain computation: 1.11831
-Optimised SageMath point evaluation: 0.20448
+Optimised SageMath codomain computation: 1.03724
+Optimised SageMath point evaluation: 0.17907
 
-KummerLine codomain computation: 0.18936
-KummerLine point evaluation: 0.04760
+KummerLine codomain computation: 0.10494
+KummerLine point evaluation: 0.02335
 
 ================================================================================
 Computing isogenies of degree: 2 * 3^53 * 43 * 103^2 * 109 * 199 * 227 * 419 *
 491 * 569 * 631 * 677 * 857 * 859 * 883 * 1019 * 1171 * 1879 * 2713 * 4283
 ================================================================================
-Naive SageMath codomain computation: 4.46888
-Naive SageMath point evaluation: 0.35535
+Naive SageMath codomain computation: 4.31377
+Naive SageMath point evaluation: 0.40347
 
-Optimised SageMath codomain computation: 1.81987
-Optimised SageMath point evaluation: 0.31383
+Optimised SageMath codomain computation: 1.54360
+Optimised SageMath point evaluation: 0.26056
 
-KummerLine codomain computation: 0.27545
-KummerLine point evaluation: 0.06021
+KummerLine codomain computation: 0.18248
+KummerLine point evaluation: 0.13166
 ```
 
 #### Updated SQISign Parameters
@@ -218,30 +218,30 @@ we get the following results:
 
 ```
 ================================================================================
-Computing isogenies of degree: 2^65 * 5^2 * 7 * 11 * 19 * 29^2 * 37^2 * 47 * 197
-* 263 * 281 * 461 * 521 * 3923
+Computing isogenies of degree: 2^33 * 5^21 * 7^2 * 11 * 31 * 83 * 107 * 137 *
+751 * 827 * 3691 * 4019 * 6983
 ================================================================================
-Naive SageMath codomain computation: 1.60352
-Naive SageMath point evaluation: 0.12905
+Naive SageMath codomain computation: 3.90661
+Naive SageMath point evaluation: 0.38991
 
-Optimised SageMath codomain computation: 0.69290
-Optimised SageMath point evaluation: 0.10337
+Optimised SageMath codomain computation: 1.00558
+Optimised SageMath point evaluation: 0.17922
 
-KummerLine codomain computation: 0.16735
-KummerLine point evaluation: 0.02182
+KummerLine codomain computation: 0.10415
+KummerLine point evaluation: 0.02321
 
 ================================================================================
-Computing isogenies of degree: 2 * 3^65 * 13 * 17 * 43 * 79 * 157 * 239 * 271 *
-283 * 307 * 563 * 599 * 607 * 619 * 743 * 827 * 941 * 2357
+Computing isogenies of degree: 2 * 3^53 * 43 * 103^2 * 109 * 199 * 227 * 419 *
+491 * 569 * 631 * 677 * 857 * 859 * 883 * 1019 * 1171 * 1879 * 2713 * 4283
 ================================================================================
-Naive SageMath codomain computation: 2.36184
-Naive SageMath point evaluation: 0.22675
+Naive SageMath codomain computation: 4.20532
+Naive SageMath point evaluation: 0.39591
 
-Optimised SageMath codomain computation: 1.29857
-Optimised SageMath point evaluation: 0.19723
+Optimised SageMath codomain computation: 1.52446
+Optimised SageMath point evaluation: 0.26089
 
-KummerLine codomain computation: 0.18210
-KummerLine point evaluation: 0.03099
+KummerLine codomain computation: 0.17812
+KummerLine point evaluation: 0.12469
 ```
 
 ### BSIDH
@@ -266,90 +266,61 @@ p = 0x76042798BBFB78AEBD02490BD2635DEC131ABFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
 #### BSIDH: Example 2 parameters
 
-For Alice and Bob's keygen and secret computation times, we find:
-
-```
-Alice
-Keygen took: 0.74583
-Secret took: 0.37905
-
-Bob
-Keygen took: 0.63818
-Secret took: 0.29245
-```
-
-Comparing the performance of KummerLine isogenies with the in-built SageMath isogenies
-we find:
-
 ```
 ================================================================================
 Computing isogenies of degree: 2^4 * 3 * 7^16 * 17^9 * 31^8 * 311 * 571 * 1321 *
 5119 * 6011 * 14207 * 28477 * 76667
 ================================================================================
-Naive SageMath codomain computation: 30.01183
-Naive SageMath point evaluation: 3.04108
+Naive SageMath codomain computation: 29.45755
+Naive SageMath point evaluation: 2.97893
 
-Optimised SageMath codomain computation: 2.46512
-Optimised SageMath point evaluation: 0.54163
+Optimised SageMath codomain computation: 2.50590
+Optimised SageMath point evaluation: 0.56178
 
-KummerLine codomain computation: 0.37883
-KummerLine point evaluation: 0.12098
+KummerLine codomain computation: 0.29879
+KummerLine point evaluation: 0.09233
 
 ================================================================================
 Computing isogenies of degree: 11^18 * 19 * 23^13 * 47 * 79 * 83 * 89 * 151 *
 3347 * 17449 * 33461 * 51193
 ================================================================================
-Naive SageMath codomain computation: 24.16028
-Naive SageMath point evaluation: 2.46105
+Naive SageMath codomain computation: 24.31294
+Naive SageMath point evaluation: 2.38264
 
-Optimised SageMath codomain computation: 2.02521
-Optimised SageMath point evaluation: 0.43988
+Optimised SageMath codomain computation: 2.03896
+Optimised SageMath point evaluation: 0.44967
 
-KummerLine codomain computation: 0.80380
-KummerLine point evaluation: 0.10258
+KummerLine codomain computation: 0.24272
+KummerLine point evaluation: 0.07797
+
 ```
 
 ### BSIDH: Example 3 parameters
-
-For Alice and Bob's keygen and secret computation times, we find:
-
-```
-Alice
-Keygen took: 0.85299
-Secret took: 0.47513
-
-Bob
-Keygen took: 0.57196
-Secret took: 0.29563
-```
-
-Comparing the performance of KummerLine isogenies with the in-built SageMath isogenies
-we find:
 
 ```
 ================================================================================
 Computing isogenies of degree: 2^110 * 5 * 7^2 * 67 * 223 * 4229 * 9787 * 13399
 * 21521 * 32257 * 47353
 ================================================================================
-Naive SageMath codomain computation: 29.69447
-Naive SageMath point evaluation: 2.99138
+Naive SageMath codomain computation: 29.58859
+Naive SageMath point evaluation: 2.96113
 
-Optimised SageMath codomain computation: 2.66121
-Optimised SageMath point evaluation: 0.60815
+Optimised SageMath codomain computation: 2.68519
+Optimised SageMath point evaluation: 0.61415
 
-KummerLine codomain computation: 0.43675
-KummerLine point evaluation: 0.13993
+KummerLine codomain computation: 0.33130
+KummerLine point evaluation: 0.10982
 
 ================================================================================
 Computing isogenies of degree: 3^34 * 11 * 17 * 19^2 * 29 * 37 * 53^2 * 97 * 107
 * 109 * 131 * 137 * 197 * 199 * 227 * 251 * 5519 * 9091 * 33997 * 38201
 ================================================================================
-Naive SageMath codomain computation: 20.22029
-Naive SageMath point evaluation: 2.01559
+Naive SageMath codomain computation: 19.96618
+Naive SageMath point evaluation: 2.05993
 
-Optimised SageMath codomain computation: 2.08677
-Optimised SageMath point evaluation: 0.44141
+Optimised SageMath codomain computation: 2.11092
+Optimised SageMath point evaluation: 0.44078
 
-KummerLine codomain computation: 0.29352
-KummerLine point evaluation: 0.09691
+KummerLine codomain computation: 0.24645
+KummerLine point evaluation: 0.08013
 ```
