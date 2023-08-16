@@ -745,7 +745,7 @@ def factored_kummer_isogeny(K, P, order, threshold=1000):
 
     phi_list = []
     for l, e in cofactor.factor():
-        if l < threshold:
+        if l < 2 * threshold:
             # Compute point Q of order l^e
             D = ZZ(l**e)
             cofactor //= D
@@ -763,6 +763,23 @@ def factored_kummer_isogeny(K, P, order, threshold=1000):
 
             phi_list += psi_list
 
+        # In the above, we take the kernel K with order D and first clear
+        # out the cofactor to get a point of order l^e. We then use this
+        # as a kernel of prime power order to compute the codomain, pushing
+        # this point through the isogeny e-1 times. Then, we take this isogeny
+        # chain and push the original kernel K through.
+        #
+        # Using this method, ee skip multiplying K by the cofactor at each step,
+        # at the cost of computing (e-1) additional images. When ell is small this
+        # means computing an extra ell xADD but saving log(D / ell) xDBLADD, so this
+        # is faster
+        #
+        # However, when we're in the last few factors of the order, we're using
+        # velusqrt, which due to sage slowness with polynomial rings is not very
+        # fast, and it's actually faster to halve the number of images we need
+        # at the cost of more scalar multiplcations. Ultimately, this is because
+        # despite needing only sqrt(ell) additions for the image, the cost of the
+        # resultants is so large that log(D/ell) xDBLADD is cheaper.
         else:
             for _ in range(e):
                 cofactor //= l
