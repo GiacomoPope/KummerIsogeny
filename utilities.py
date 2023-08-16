@@ -1,19 +1,54 @@
 # Python imports
-import textwrap 
-import time
+import textwrap
+import sys
 
 # Sage imports
-from sage.all import EllipticCurve, factor, EllipticCurveIsogeny, ZZ
+from sage.all import EllipticCurve, EllipticCurveIsogeny, ZZ
 from sage.schemes.elliptic_curves.hom_velusqrt import EllipticCurveHom_velusqrt
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
-# local imports
-from kummer_isogeny import KummerLineIsogeny_Velu, KummerLineIsogeny_VeluSqrt, KummerLineIsogeny
+# Cython helper for ntl reverse
+try:
+    from ntl_helpers import ntl_reverse
+except ImportError:
+    fast_reverse = None
+    print(
+        "NTL Cython extensions NOT available, for faster methods first try running ./scripts/build_cython.sh",
+        file=sys.stderr,
+    )
+
+
+def fast_reverse(f):
+    """
+    Reverse the coefficients of a polynomial
+
+    When we can use the cython call to
+    NTL reverse, we get something approximately
+    200x faster
+
+    # Example
+
+    sage: p = random_prime(2**256)
+    sage: F.<z> = GF(p^2)
+    sage: R.<x> = PolynomialRing(F, implementation="NTL")
+    sage:
+    sage: f = R.random_element(degree=50)
+    sage: assert f.reverse() == ntl_reverse(f)
+    sage:
+    sage: %timeit f.reverse()
+    2.13 ms ± 93.8 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    sage: %timeit ntl_reverse(f)
+    11.1 µs ± 210 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
+    """
+    if ntl_reverse:
+        return ntl_reverse(f)
+    return f.reverse()
+
 
 def compute_quadratic_twist(E):
     """
-    Compute the quadratic twist of E and return 
-    Et, together with the explicit twisting 
+    Compute the quadratic twist of E and return
+    Et, together with the explicit twisting
     parameter D
     """
     K = E.base_field()
@@ -29,14 +64,15 @@ def compute_quadratic_twist(E):
     # be in this form so we can simply map
     # elements from Et to E later on
     _, _, _, a, b = E.a_invariants()
-    Et = EllipticCurve(K, [a/D_twist**2, b/D_twist**3])
+    Et = EllipticCurve(K, [a / D_twist**2, b / D_twist**3])
 
     # Make sure the twist is actually a twist
     assert Et.is_isomorphic(E.quadratic_twist())
-    assert Et.order() == (p - 1)**2
+    assert Et.order() == (p - 1) ** 2
     assert Et.is_supersingular()
 
     return D_twist, Et
+
 
 def fix_even_torsion(P, Q, twist=False):
     """
@@ -47,10 +83,10 @@ def fix_even_torsion(P, Q, twist=False):
     """
     p = P.curve().base_ring().characteristic()
     if twist:
-        oo = (p-1) // 2
+        oo = (p - 1) // 2
     else:
-        oo = (p+1) // 2
-    
+        oo = (p + 1) // 2
+
     # Even fix
     Pa, Pb = oo * P, oo * Q
 
@@ -59,7 +95,8 @@ def fix_even_torsion(P, Q, twist=False):
     elif Pb[0] == 0:
         return P, Q
     else:
-       return P, P+Q
+        return P, P + Q
+
 
 def EllipticCurveIsogenyFactored(E, P, order=None, velu_bound=400):
     """
@@ -151,7 +188,7 @@ def EllipticCurveIsogenyFactored(E, P, order=None, velu_bound=400):
         cofactor //= D
         Q = cofactor * P
 
-        # Manually setting the order means 
+        # Manually setting the order means
         # Sage won't try and do it for each
         # l-isogeny in the iteration
         Q._order = D
@@ -164,112 +201,7 @@ def EllipticCurveIsogenyFactored(E, P, order=None, velu_bound=400):
         ϕ_list += ψ_list
 
     return EllipticCurveHom_composite.from_factors(ϕ_list)
-    
 
-def compare_isogeny(P, Q, xP, xQ, order):
-    """
-    A function which compares the times of isogeny computation
-    and evaluation using:
-
-    - Sage Naive isogeny E.isogeny(K, algotithm="factored)
-    - Optimised Sage Isogeny written for 
-      https://github.com/LearningToSQI/SQISign-SageMath
-    - New KummerLine x-only isogenies using KummerLineIsogeny
-    """
-    E = P.curve()
-    L = xP.parent()
-
-    print_info(f"Computing isogenies of degree:\n{order.factor()}")
-
-    # Time naive SageMath isogeny evaluation
-    t0 = time.time()
-    psi = E.isogeny(P, algorithm="factored")
-    print(f"Naive SageMath codomain computation: {time.time() - t0:.5f}")
-    t0 = time.time()
-    psi(Q)
-    print(f"Naive SageMath point evaluation: {time.time() - t0:.5f}\n")
-
-    # Time optimisation with sparse strategy and velusqrt
-    t0 = time.time()
-    sigma = EllipticCurveIsogenyFactored(E, P, order=order)
-    print(f"Optimised SageMath codomain computation: {time.time() - t0:.5f}")
-    t0 = time.time()
-    sigma(Q)
-    print(f"Optimised SageMath point evaluation: {time.time() - t0:.5f}\n")
-
-    # Time x-only formula using KummerLine and KummerIsogeny classes
-    t0 = time.time()
-    phi = KummerLineIsogeny(L, xP, order)
-    print(f"KummerLine codomain computation: {time.time() - t0:.5f}")
-    t0 = time.time()
-    phi(xQ)
-    print(f"KummerLine point evaluation: {time.time() - t0:.5f}\n")
-
-
-def compare_isogeny_factors(P, Q, xP, xQ, order):
-    """
-    A function which compares the times of prime-degree isogeny 
-    computation and evaluation using:
-
-    - Sage velu isogeny E.isogeny(K)
-    - Sage velusqrt isogeny E.isogeny(K, algorithm="velusqrt")
-    - KummerLine x-only velu using KummerLineIsogeny_Velu
-    - KummerLine x-only velusqrt using KummerLineIsogeny_VeluSqrt
-    """
-    E = P.curve()
-    L = xP.parent()
-
-    for l, _ in factor(order):
-        # Compute cofactor
-        k  = order // l
-
-        # Kernels of order l
-        K  = k * P
-        xK = k * xP
-
-        print_info(f"{l = }")
-        print_info("SageMath timings", banner="-")
-        # Codomain computation
-        t0 = time.time()
-        psi = E.isogeny(K)
-        print(f"Velu codomain took: {time.time() - t0:.5f}")
-        
-        # Point evaluation
-        t0 = time.time()
-        psi(Q)
-        print(f"Velu evaluation took: {time.time() - t0:.5f}")
-
-        # for large l, do velusqrt
-        if l > 10 :
-            t0 = time.time()
-            psi_prime = E.isogeny(K, algorithm="velusqrt")
-            print(f"Sqrt codomain took: {time.time() - t0:.5f}")
-            t0 = time.time()
-            psi_prime(Q)
-            print(f"Sqrt evaluation took: {time.time() - t0:.5f}")
-
-        print_info("KummerLine timings", banner="-")
-
-        # Codomain computation
-        t0 = time.time()
-        phi = KummerLineIsogeny_Velu(L, xK, l)
-        print(f"x-only Velu codomain took: {time.time() - t0:.5f}")
-        
-        # Point evaluation
-        t0 = time.time()
-        phi(xQ)
-        print(f"Velu evaluation took: {time.time() - t0:.5f}")
-
-        # for large l, do the same but with velusqrt
-        if l > 10 :
-            t0 = time.time()
-            phi_prime = KummerLineIsogeny_VeluSqrt(L, xK, l)
-            print(f"x-only Sqrt codomain took: {time.time() - t0:.5f}")
-            t0 = time.time()
-            phi_prime(xQ)
-            print(f"x-only Sqrt evaluation took: {time.time() - t0:.5f}")
-
-        print()
 
 def print_info(str, banner="="):
     """
