@@ -7,43 +7,6 @@ from sage.all import EllipticCurve, EllipticCurveIsogeny, ZZ
 from sage.schemes.elliptic_curves.hom_velusqrt import EllipticCurveHom_velusqrt
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
-# Cython helper for ntl reverse
-try:
-    from ntl_helpers import ntl_reverse
-except ImportError:
-    fast_reverse = None
-    print(
-        "NTL Cython extensions NOT available, for faster methods first try running ./scripts/build_cython.sh",
-        file=sys.stderr,
-    )
-
-
-def fast_reverse(f):
-    """
-    Reverse the coefficients of a polynomial
-
-    When we can use the cython call to
-    NTL reverse, we get something approximately
-    200x faster
-
-    # Example
-
-    sage: p = random_prime(2**256)
-    sage: F.<z> = GF(p^2)
-    sage: R.<x> = PolynomialRing(F, implementation="NTL")
-    sage:
-    sage: f = R.random_element(degree=50)
-    sage: assert f.reverse() == ntl_reverse(f)
-    sage:
-    sage: %timeit f.reverse()
-    2.13 ms ± 93.8 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-    sage: %timeit ntl_reverse(f)
-    11.1 µs ± 210 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
-    """
-    if ntl_reverse:
-        return ntl_reverse(f)
-    return f.reverse()
-
 
 def compute_quadratic_twist(E):
     """

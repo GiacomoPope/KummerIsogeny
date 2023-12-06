@@ -63,7 +63,6 @@ from sage.rings.generic import ProductTree
 
 # Local imports
 from kummer_line import KummerLine, KummerPoint, pari
-from utilities import fast_reverse
 
 # =================================================== #
 # Generic class for creating an isogeny between       #
@@ -636,12 +635,6 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
         Res(hI, reverse(EJ0(alpha))) * reverse(hK(alpha))
         -------------------------------------------------- * alpha
                Res(hI, EJ0(alpha)) * hK(alpha)
-
-
-        This is about 10-15% faster for SageMath, because the
-        reverse is a little slow with the conversion to and from
-        NTL for the Polynomial Ring elements, but should be much
-        faster in other languages.
         """
 
         if P.is_zero():
@@ -653,7 +646,7 @@ class KummerLineIsogeny_VeluSqrt(KummerLineIsogeny_Generic):
 
         # Compute two polynomials from giant steps
         EJ1 = prod((F0 * alphaR + F1) * alphaR + F2 for F0, F1, F2 in self.EJ_parts)
-        EJ0 = fast_reverse(EJ1)
+        EJ0 = EJ1.reverse()
 
         # Resultants and evaluations
         R0 = self._hI_resultant(EJ0)
